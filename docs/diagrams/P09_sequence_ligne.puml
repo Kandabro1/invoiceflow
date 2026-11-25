@@ -1,0 +1,28 @@
+@startuml
+' CONTROLE : 5 lignes de vie, un cadre alt a deux cas
+title Ajouter ou modifier une ligne de facture
+skinparam shadowing false
+skinparam maxMessageSize 220
+skinparam sequenceMessageAlign left
+autonumber
+
+actor Utilisateur
+participant InvoicesController
+participant InvoicesService
+participant InvoiceCalculatorService
+database "Base de données" as DB
+
+Utilisateur -> InvoicesController : POST ou PATCH /invoices/{id}/lines
+InvoicesController -> InvoicesService : enregistrerLigne(dto, user)
+InvoicesService -> DB : charger la facture (filtre utilisateur)
+alt facture déjà envoyée
+  InvoicesService --> InvoicesController : refus
+else brouillon
+  InvoicesService -> DB : début de transaction
+  InvoicesService -> InvoiceCalculatorService : calculer la ligne et les totaux
+  InvoiceCalculatorService --> InvoicesService : montants
+  InvoicesService -> DB : enregistrer la ligne et les totaux, puis validation (commit)
+  InvoicesService --> InvoicesController : facture mise à jour
+end
+InvoicesController --> Utilisateur : réponse
+@enduml

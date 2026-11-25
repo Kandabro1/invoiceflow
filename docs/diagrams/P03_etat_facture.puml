@@ -1,0 +1,19 @@
+@startuml
+' CONTROLE : 2 etats + depart + arrivee, 4 transitions dont une boucle, rien ne sort d'Envoyee
+title Cycle de vie de la facture
+left to right direction
+skinparam shadowing false
+state "Brouillon" as Brouillon
+state "Envoyée" as Envoyee
+
+[*] --> Brouillon : créer
+Brouillon --> Brouillon : modifier /\nrecalculer les montants
+Brouillon --> [*] : supprimer
+Brouillon --> Envoyee : envoyer
+note on link
+  <b>Condition</b> : au moins une ligne ET échéance valide
+  ET émetteur complet ET client complet
+  <b>Actions</b> : attribuer le numéro, figer les montants,
+  copier les infos émetteur et client, noter les dates
+end note
+@enduml

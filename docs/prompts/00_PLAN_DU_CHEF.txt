@@ -1,0 +1,70 @@
+=====================================================================
+INVOICEFLOW - PLAN DU CHEF (à lire en premier)
+Version 1.0 - 25 novembre 2026
+=====================================================================
+
+1. LES 9 PROMPTS (1 prompt = 1 compte = 1 conversation vierge)
+  01_DEEPSEEK-1_D1 socle + base de données      04_CLAUDE-1_C1 calcul + numérotation + statuts
+  02_DEEPSEEK-2_D2 auth + clients               05_CLAUDE-2_C2 factures + proformas
+  03_DEEPSEEK-3_D3 PDF + email + tableau de bord 06_CLAUDE-3_C3 paiements + tests + sécurité
+  07_CHATGPT-1_G1 base front + design + auth
+  08_CHATGPT-2_G2 clients + factures + proformas
+  09_CHATGPT-3_G3 paiements + dashboard + a11y + déploiement
+
+2. COMMENT UTILISER
+  a. Crée le dépôt GitHub "invoiceflow". Mets-y docs/ avec les 17 .puml et
+     ces fichiers.
+  b. Pour chaque tâche : nouvelle conversation sur le compte indiqué, colle
+     tout le fichier (il contient le CONTEXTE COMMUN et la tâche).
+  c. L'IA te demandera les fichiers .puml ou le code existant dont elle a
+     besoin : colle-les (jamais le zip : les IA lisent mieux le texte).
+  d. Une branche par tâche. Quand lint + test + build passent, fusionne dans
+     main. Les tâches suivantes se basent sur main.
+  e. Comme chaque compte n'a qu'une tâche, la limite d'usage d'un compte
+     n'en bloque jamais un autre. Si un compte est épuisé avant la fin de sa
+     tâche, reprends dans un autre compte de la même IA en recollant le fichier
+     + le code déjà produit.
+
+3. ORDRE DE SOUMISSION ET DÉPENDANCES
+  Étape 1 : 01 (D1) || 04 (C1) || 07 (G1)        aucune condition
+  Étape 2 : 02 (D2) || 08 (G2)                    après fusion de 01 et 07
+  Étape 3 : 03 (D3) || 05 (C2)                    après fusion de 01, 02 et 04
+  Étape 4 : 06 (C3)                               après fusion de 03 et 05
+  Étape 5 : 09 (G3)                               après fusion de 08 (et de 06 pour tester)
+  Chaque étape : une branche par tâche, fusion dans main quand lint + test + build passent.
+
+4. DÉCISIONS DU CHEF (valables pour les 3 IA)
+  - MySQL + TypeORM ; React + Vite + NestJS (tes choix).
+  - Argent : DECIMAL en base, chaînes décimales en JSON, decimal.js,
+    arrondi ROUND_HALF_UP ligne par ligne.
+  - Authentification : accessToken 15 min en mémoire + refresh token en cookie
+    HttpOnly, front et API sur la même origine (proxy Netlify). C'est plus sûr
+    qu'un JWT dans localStorage (conseils SaaS).
+  - Numéro de facture : année et mois de la date d'ENVOI ; la date d'émission
+    est fixée à l'envoi.
+  - Écarts autorisés au schéma P02 : adresse, forme juridique, hash du mot de
+    passe, snapshots émetteur/client, refresh_token, etc. (P02 est une vue
+    simplifiée : sans eux, le PDF ne peut pas respecter les mentions légales).
+    Les IA les listent dans leur rapport.
+  - PATCH /invoices/:id accepte "lines" (remplacement atomique) : le formulaire
+    d'une facture reste simple.
+  - Node : LTS actuelle (Node 20 n'est plus la LTS en novembre 2026).
+
+5. POINTS À VÉRIFIER PAR TOI
+  - Taux de TVA normal 19,25 % : à confirmer sur les sources fiscales officielles.
+  - Palette : le primaire clair #47a3bd est trop pâle en texte et en bordure
+    (2,79:1). Le prompt G1 impose texte foncé sur boutons primaires et une
+    variante plus sombre pour les liens et le focus.
+  - Hébergement MySQL gratuit : à choisir et tester AVANT D3/C3 (verrous de
+    ligne, décimaux), les quotas changent sans préavis.
+  - Brevo : un expéditeur vérifié est nécessaire pour envoyer des emails.
+  - Tu n'as pas fourni "Regles_DeepSeek_InvoiceFlow" : si tu l'utilises, colle-le
+    dans les 3 comptes DeepSeek, juste après le CONTEXTE COMMUN.
+
+6. SANS REVUE DE CODE PAR LE CHEF (économie de tokens)
+  Les garde-fous sont dans les prompts : chaque IA doit finir par un RAPPORT de
+  15 lignes, des tests, et les commandes lint/test/build. Toi : lance ces
+  commandes, colle seulement les erreurs à l'IA fautive. Quand tu voudras une
+  vérification de cohérence, colle-moi UNIQUEMENT les rapports (15 lignes
+  chacun), pas le code.
+  Outils gratuits à lancer avant chaque fusion : npm audit ; gitleaks (secrets).

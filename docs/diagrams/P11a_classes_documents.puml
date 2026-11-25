@@ -1,0 +1,93 @@
+@startuml
+' CONTROLE : 7 classes + 3 enumerations (reliees par 3 fleches pointillees), aucune cle etrangere
+title InvoiceFlow - classes métier (1/2) : documents
+hide empty members
+skinparam shadowing false
+skinparam nodesep 50
+skinparam ranksep 60
+
+class Utilisateur {
+  email
+  nomEntreprise
+  niu
+  rccm
+  regimeTva
+}
+class Client {
+  nom
+  email
+  niu
+  typeClient : TypeClient
+  estArchive
+  archiver()
+}
+class TauxTva {
+  code
+  taux
+  estExonere
+}
+class Proforma {
+  reference
+  statut : StatutProforma
+  dateEmission
+  montantTtc
+  envoyer()
+  accepter()
+  refuser()
+  convertir()
+}
+class LigneProforma {
+  position
+  description
+  quantite
+  prixUnitaireHt
+  tauxApplique
+}
+class Facture {
+  numero
+  statut : StatutFacture
+  dateEmission
+  dateEcheance
+  montantHt
+  montantTva
+  montantTtc
+  envoyer()
+  recalculerMontants()
+  calculerSolde()
+  estEnRetard()
+}
+class LigneFacture {
+  position
+  description
+  quantite
+  prixUnitaireHt
+  tauxApplique
+}
+enum StatutFacture {
+  BROUILLON
+  ENVOYEE
+}
+enum StatutProforma {
+  BROUILLON
+  ENVOYEE
+  ACCEPTEE
+  REFUSEE
+}
+enum TypeClient {
+  PARTICULIER
+  ENTREPRISE
+}
+
+Utilisateur "1" -- "0..*" Client
+Client "1" -- "0..*" Proforma
+Client "1" -- "0..*" Facture
+Proforma "1" -- "1..*" LigneProforma
+Facture "1" -- "1..*" LigneFacture
+LigneProforma "0..*" -- "1" TauxTva
+LigneFacture "0..*" -- "1" TauxTva
+Proforma "0..1" -- "0..1" Facture
+
+Client ..> TypeClient
+Proforma ..> StatutProforma
+Facture ..> StatutFacture
+@enduml

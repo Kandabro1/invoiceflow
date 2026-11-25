@@ -1,0 +1,53 @@
+@startuml
+' CONTROLE : 3 acteurs + 13 ovales + 15 traits (13 Utilisateur, 1 Client final, 1 Service d'email)
+title Diagramme de cas d'utilisation - InvoiceFlow
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F5F9FF
+  BorderColor #2B5C99
+}
+
+actor "Utilisateur" as U
+actor "Client final" as C
+actor "Service d'email" as M
+
+rectangle "InvoiceFlow" {
+  usecase "UC01 S'inscrire" as UC01
+  usecase "UC02 Se connecter" as UC02
+  usecase "UC03 Renseigner le profil\nde l'entreprise" as UC03
+  usecase "UC04 Gérer les clients" as UC04
+  usecase "UC05 Gérer les proformas" as UC05
+  usecase "UC06 Envoyer une proforma\net suivre sa réponse" as UC06
+  usecase "UC07 Convertir une proforma\nen facture" as UC07
+  usecase "UC08 Gérer les factures\nbrouillon" as UC08
+  usecase "UC09 Envoyer une facture" as UC09
+  usecase "UC10 Télécharger le PDF\nd'une facture" as UC10
+  usecase "UC11 Enregistrer un paiement" as UC11
+  usecase "UC12 Consulter le statut\net le solde d'une facture" as UC12
+  usecase "UC13 Consulter le\ntableau de bord" as UC13
+}
+
+U -- UC01
+U -- UC02
+U -- UC03
+U -- UC04
+U -- UC05
+U -- UC06
+U -- UC07
+U -- UC08
+U -- UC09
+U -- UC10
+U -- UC11
+U -- UC12
+U -- UC13
+
+UC09 -- C
+UC09 -- M
+
+note as NoteBD
+  Base de données : acteur secondaire utilisé par UC01 à UC13
+  (liens non dessinés pour garder le schéma lisible)
+end note
+@enduml

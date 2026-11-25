@@ -1,0 +1,23 @@
+@startuml
+' CONTROLE : 5 lignes de vie, PDF et email APRES le commit, un cadre alt pour l'echec d'email
+title Envoyer une facture (2/2) : PDF et email après validation
+skinparam shadowing false
+skinparam maxMessageSize 220
+skinparam sequenceMessageAlign left
+autonumber
+
+actor Utilisateur
+participant InvoicesController
+participant InvoicesService
+participant PdfService
+participant MailService
+
+note over InvoicesService : Après le commit (voir 1/2)
+InvoicesService -> PdfService : générerPdf(facture)
+InvoicesService -> MailService : envoyerEmail(facture, pdf)
+alt échec de l'email
+  MailService --> InvoicesService : erreur
+  InvoicesService --> InvoicesController : facture + avertissement
+end
+InvoicesController --> Utilisateur : 200 + facture
+@enduml

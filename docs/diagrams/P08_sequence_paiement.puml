@@ -1,0 +1,36 @@
+@startuml
+' CONTROLE : 4 lignes de vie, un cadre loop, un cadre alt a deux cas, rollback dans le cas echec
+title Enregistrer un paiement
+skinparam shadowing false
+skinparam maxMessageSize 220
+skinparam sequenceMessageAlign left
+autonumber
+
+actor Utilisateur
+participant PaymentsController
+participant PaymentsService
+database "Base de données" as DB
+
+Utilisateur -> PaymentsController : POST /payments (client, montant, répartition)
+note right of PaymentsController
+  JwtAuthGuard vérifie le jeton
+  avant ce contrôleur (guard global)
+end note
+PaymentsController -> PaymentsService : enregistrerPaiement(dto, user)
+PaymentsService -> DB : vérifier client appartient à l'utilisateur
+PaymentsService -> DB : début de transaction
+PaymentsService -> DB : charger les factures (verrou)
+loop pour chaque allocation
+  PaymentsService -> PaymentsService : même client ? statut envoyée ? montant <= solde ?
+end
+PaymentsService -> PaymentsService : somme des allocations = montant du paiement ?
+alt un contrôle échoue
+  PaymentsService -> DB : annulation (rollback)
+  PaymentsService --> PaymentsController : erreur 422
+else sinon
+  PaymentsService -> DB : insérer paiement et allocations
+  PaymentsService -> DB : validation (commit)
+  PaymentsService --> PaymentsController : soldes et statuts calculés
+end
+PaymentsController --> Utilisateur : réponse
+@enduml

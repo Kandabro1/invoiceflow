@@ -1,0 +1,17 @@
+@startuml
+' CONTROLE : 2 etats, 2 transitions, 1 note
+title Retard d'une facture envoyée (calculé, non stocké)
+left to right direction
+skinparam shadowing false
+state "Pas en retard" as PR
+state "En retard" as ER
+
+[*] --> PR
+PR --> ER : échéance dépassée\n[solde > 0]
+ER --> PR : solde payé\n[solde = 0]
+
+note bottom of ER
+  S'ajoute au statut de paiement : une facture peut être
+  à la fois Partiellement payée et En retard
+end note
+@enduml

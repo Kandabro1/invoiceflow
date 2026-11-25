@@ -1,0 +1,24 @@
+@startuml
+' CONTROLE : 4 lignes de vie, un cadre alt a deux cas, aucun numero attribue a la facture brouillon
+title Convertir une proforma en facture
+skinparam shadowing false
+skinparam maxMessageSize 220
+skinparam sequenceMessageAlign left
+autonumber
+
+actor Utilisateur
+participant ProformasController
+participant ProformasService
+database "Base de données" as DB
+
+Utilisateur -> ProformasController : POST /proformas/{id}/convert
+ProformasController -> ProformasService : convertir(id, user)
+ProformasService -> DB : charger la proforma (filtre utilisateur)
+alt proforma non acceptée ou déjà convertie
+  ProformasService --> ProformasController : refus
+else acceptée
+  ProformasService -> DB : créer la facture brouillon\n(client et devise copiés, lignes copiées,\nlien vers la proforma, aucun numéro)
+  ProformasService --> ProformasController : facture brouillon
+end
+ProformasController --> Utilisateur : réponse
+@enduml

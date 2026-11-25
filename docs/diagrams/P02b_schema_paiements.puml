@@ -1,0 +1,50 @@
+@startuml
+' CONTROLE : 6 tables (utilisateur, client, facture en extrait + paiement, allocation_paiement, compteur_facture)
+title InvoiceFlow - schéma de base de données (2/2) : paiements et numérotation
+hide circle
+skinparam shadowing false
+skinparam nodesep 50
+skinparam ranksep 60
+
+entity "utilisateur (extrait)" as utilisateur {
+  id <<PK>>
+}
+entity "client (extrait)" as client {
+  id <<PK>>
+}
+entity "facture (extrait)" as facture {
+  id <<PK>>
+  --
+  numero
+  montant_ttc
+}
+entity paiement {
+  id <<PK>>
+  --
+  utilisateur_id <<FK>>
+  client_id <<FK>>
+  date_paiement
+  montant
+  methode
+}
+entity allocation_paiement {
+  id <<PK>>
+  --
+  paiement_id <<FK>>
+  facture_id <<FK>>
+  montant_alloue
+}
+entity compteur_facture {
+  utilisateur_id <<PK, FK>>
+  annee <<PK>>
+  mois <<PK>>
+  --
+  dernier_numero
+}
+
+utilisateur ||--o{ paiement
+utilisateur ||--o{ compteur_facture
+client ||--o{ paiement
+paiement ||--o{ allocation_paiement
+facture ||--o{ allocation_paiement
+@enduml

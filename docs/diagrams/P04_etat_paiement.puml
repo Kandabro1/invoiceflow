@@ -1,0 +1,17 @@
+@startuml
+' CONTROLE : 3 etats, 4 transitions (dont une boucle), 1 note
+title Statut de paiement d'une facture envoyée (calculé, non stocké)
+left to right direction
+skinparam shadowing false
+state "Non payée" as NP
+state "Partiellement payée" as PP
+state "Payée" as P
+
+[*] --> NP : facture envoyée
+NP --> PP : paiement enregistré\n[0 < payé < TTC]
+NP --> P : paiement enregistré\n[payé = TTC]
+PP --> PP : paiement enregistré\n[0 < payé < TTC]
+PP --> P : paiement enregistré\n[payé = TTC]
+
+note bottom of PP : Statut calculé à la lecture, jamais stocké
+@enduml

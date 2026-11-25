@@ -1,0 +1,335 @@
+INVOICEFLOW - PROMPT 4/9 - COMPTE CLAUDE-1 - TÂCHE C1
+Mode d'emploi : ouvre une NOUVELLE conversation sur le compte CLAUDE-1, colle TOUT ce fichier.
+Ne commence cette tâche que si ses dépendances sont fusionnées dans main (voir 00_PLAN_DU_CHEF).
+
+TON RÔLE : tu es le compte Claude n°1 (compte de travail, distinct du chef de projet). Ta tâche : C1, calcul des montants, numérotation, statuts calculés.
+
+=====================================================================
+CONTEXTE COMMUN INVOICEFLOW (identique pour les 3 IA)
+=====================================================================
+
+A. ÉQUIPE ET RÔLES
+Tu fais partie d'une équipe de 9 comptes IA (3 DeepSeek, 3 Claude, 3 ChatGPT).
+Chaque compte démarre une conversation vierge et n'a qu'UNE tâche : celle
+indiquée sous « === TÂCHE === » en bas de ce prompt. Un chef de projet (autre
+conversation Claude) a défini le plan. Vous ne communiquez pas entre vous :
+votre seul lien est ce CONTEXTE (identique pour les neuf) et le dépôt GitHub
+que l'utilisateur alimente (tu ne pousses rien toi-même : tu donnes le code
+dans le chat, l'utilisateur le copie et le commite).
+- DeepSeek : D1 socle backend et base de données ; D2 Auth, Users, Clients,
+  TaxRates ; D3 Pdf, Mail, Dashboard.
+- Claude : C1 calcul des montants, numérotation, statuts calculés ; C2 factures
+  et proformas ; C3 paiements, tests de bout en bout, revue de sécurité.
+- ChatGPT : G1 base du frontend, design system, authentification ; G2 clients,
+  factures, proformas ; G3 paiements, tableau de bord, accessibilité,
+  performance, déploiement Netlify.
+Ne code jamais la tâche d'un autre compte. Si ton travail dépend d'elle, code
+contre le contrat ci-dessous et signale la dépendance.
+
+B. PROJET
+InvoiceFlow est une application web de facturation pour freelances et TPE du
+Cameroun : factures conformes (NIU, RCCM, numérotation FAC-AAAA-MM-NNN, TVA
+par ligne), proforma distincte, paiements partiels avec allocation, statuts,
+PDF, envoi par email, tableau de bord. V1 sans IA. Projet portfolio, solo,
+budget zéro, données de démonstration uniquement. Utilisateurs surtout sur
+téléphone (réseau 3G/4G) : mobile-first. L'utilisateur est un étudiant qui
+apprend en construisant (méthode « génération puis explication »).
+
+C. STACK IMPOSÉE (ne la change pas)
+- Monorepo : backend/, frontend/, docs/. TypeScript strict partout. npm.
+  Node.js LTS actuelle (vérifier la version acceptée par Render).
+- Backend : NestJS, TypeORM, MySQL 8 (mysql2, InnoDB, utf8mb4),
+  class-validator + class-transformer, @nestjs/config, @nestjs/jwt +
+  passport-jwt, bcrypt, decimal.js, helmet, @nestjs/throttler, cookie-parser,
+  pdfkit, Jest + supertest.
+- Frontend : React + Vite + TypeScript, React Router, TanStack Query,
+  react-hook-form + zod, Tailwind CSS, shadcn/ui, Lucide, decimal.js (aperçu
+  seulement), Vitest + Testing Library + axe, Playwright.
+- Hébergement visé : Netlify (front), Render (API), MySQL hébergé (à définir,
+  rien de spécifique à un hébergeur : InnoDB, SELECT ... FOR UPDATE, DECIMAL),
+  Brevo (emails).
+- Aucune dépendance en plus sans la justifier en une ligne (utilité, poids,
+  licence). Pas de microservices, pas de Redis ni de file de tâches en V1.
+
+D. CONVENTIONS
+- Git : une branche par tâche, commits type « feat: ... », « fix: ... »,
+  « test: ... ». Jamais de secret dans Git : seulement .env.example.
+- Nommage : classes, propriétés et champs JSON en anglais camelCase. Tables
+  et colonnes MySQL = exactement celles des diagrammes P02 (snake_case
+  français). Valeurs d'énumération en MAJUSCULES françaises (BROUILLON,
+  ENVOYEE...). Méthodes de service nommées comme dans les diagrammes de
+  séquence, sans accents : envoyerFacture, prochainNumero, recalculer,
+  enregistrerLigne, convertir, enregistrerPaiement, genererPdf, envoyerEmail.
+- Structure backend : backend/src/<module>/ (module, controller, service,
+  dto/). Entités partagées dans backend/src/database/entities/. Modules = P12.
+- ARGENT : jamais de float. DECIMAL(15,2) en base (quantité DECIMAL(12,3)).
+  En JSON : chaînes décimales ("119250.00", "2.000"). Calculs avec decimal.js,
+  ROUND_HALF_UP à 2 décimales, ligne par ligne. Les totaux d'un document sont
+  la somme des montants de lignes déjà arrondis.
+- Dates : émission, échéance, validité = "AAAA-MM-JJ". Horodatages ISO 8601
+  UTC. « Aujourd'hui » = date du jour en Africa/Douala. Devise : "XAF" par
+  défaut (champ conservé pour la V2).
+
+E. RÈGLES DE GESTION (le code doit toutes les respecter)
+RG1  Chaque utilisateur ne voit que ses données : filtre serveur sur chaque
+     lecture ET chaque écriture ; ressource d'un autre utilisateur = 404.
+RG2  Un client a plusieurs proformas et factures ; un document a un seul client.
+RG3  Numéro de facture unique, séquentiel, sans trou, FAC-AAAA-MM-NNN
+     (AAAA-MM = date d'envoi). Attribué à l'envoi, jamais à un brouillon.
+RG4  Une facture a au moins une ligne : description, quantité, prix unitaire
+     HT, taux de TVA propre à la ligne.
+RG5  Taux de TVA pris dans la table taux_tva (pas de saisie libre) ; le taux
+     est copié dans la ligne (taux_applique) à sa création.
+RG6  La proforma est distincte de la facture, sans numéro fiscal. Après
+     conversion, elle reste ACCEPTEE.
+RG7  Facture envoyée = verrouillée (montants, lignes, client, numéro). Toute
+     correction passe par un nouveau document. Le backend l'impose ; l'UI le
+     reflète.
+RG8  Un paiement peut être réparti sur plusieurs factures ; une facture peut
+     être payée en plusieurs fois. Solde = TTC - allocations. La somme des
+     allocations = montant du paiement.
+RG9  « En retard » = statut ENVOYEE ET échéance < aujourd'hui ET solde > 0.
+     Calculé, jamais stocké. Idem NON_PAYEE / PARTIELLEMENT_PAYEE / PAYEE.
+RG10 La facture affiche NIU et RCCM de l'émetteur, NIU du client si B2B
+     (client ENTREPRISE) et le régime de TVA.
+Statuts STOCKÉS : facture = BROUILLON | ENVOYEE ; proforma = BROUILLON |
+ENVOYEE | ACCEPTEE | REFUSEE.
+
+F. MODÈLE DE DONNÉES
+Source de vérité : diagrammes P02a et P02b (10 tables : utilisateur, client,
+taux_tva, proforma, ligne_proforma, facture, ligne_facture, paiement,
+allocation_paiement, compteur_facture). Leurs colonnes = minimum obligatoire.
+ÉCARTS AUTORISÉS (nécessaires au cahier des charges ; à lister dans le
+rapport de fin de tâche ; tout autre écart demande l'accord de l'utilisateur) :
+- utilisateur : mot_de_passe_hash, forme_juridique, adresse, ville, pays,
+  telephone, cree_le.
+- client : adresse, ville, pays, telephone.
+- proforma : date_emission, date_validite, devise, notes.
+- facture : devise, notes, date_envoi (datetime), emetteur_snapshot (JSON),
+  client_snapshot (JSON). numero = NULL tant que brouillon ; UNIQUE
+  (utilisateur_id, numero).
+- Table refresh_token : id, utilisateur_id, token_hash, expire_le, revoque_le.
+- PartySnapshot (JSON copié à l'envoi) : { name, legalForm, niu, rccm,
+  address, city, country, email, phone }.
+- Intégrité : clés étrangères ON DELETE RESTRICT, aucune suppression physique
+  d'une facture envoyée, client archivé (est_archive) et non supprimé. Index
+  sur utilisateur_id partout, et sur facture (utilisateur_id, statut) et
+  (utilisateur_id, date_echeance).
+- taux_tva initial : NORMAL = 19.25 ; EXONERE = 0 (est_exonere). Taux à
+  vérifier par l'utilisateur sur les sources fiscales officielles.
+
+G. CONTRAT D'API (source unique front/back ; tout écart se signale à
+l'utilisateur, il ne se décide jamais seul)
+Préfixe /api. JSON. Toutes les routes exigent « Authorization: Bearer
+<accessToken> » sauf /api/health et /api/auth/*.
+Authentification : accessToken JWT 15 min, gardé en MÉMOIRE côté front (pas
+de localStorage). Refresh token 7 jours, rotation, cookie HttpOnly + Secure +
+SameSite=Strict + Path=/api/auth, stocké haché en base. Front et API sur la
+MÊME origine : proxy Netlify /api/* vers Render ; proxy Vite en développement.
+
+Erreur (toutes) :
+  { "statusCode": 422, "code": "INVOICE_LOCKED", "message": "texte en
+    français", "details": [ { "field": "lines.0.quantity", "message": "..." } ] }
+HTTP : 400 validation | 401 non authentifié | 404 absent OU appartenant à un
+autre utilisateur (jamais 403 pour cela) | 409 conflit | 422 règle métier |
+429 trop de requêtes.
+Codes métier : EMAIL_ALREADY_USED, INVALID_CREDENTIALS, INVOICE_LOCKED,
+INVOICE_NOT_READY, PROFORMA_NOT_ACCEPTED, PROFORMA_ALREADY_CONVERTED,
+PAYMENT_ALLOCATION_INVALID.
+Listes paginées : ?page=1&limit=20 -> { items, total, page, limit }.
+
+Routes :
+AUTH      POST /auth/register {email,password,companyName} -> 201 {accessToken,user}
+          POST /auth/login {email,password} -> {accessToken,user} + cookie
+          POST /auth/refresh -> {accessToken} | POST /auth/logout -> 204
+USERS     GET /users/me | PATCH /users/me {companyName,legalForm,niu,rccm,
+          vatRegime,defaultCurrency,address,city,country,phone}
+TAXRATES  GET /tax-rates -> TaxRate[]
+CLIENTS   GET /clients?q=&archived=false | POST /clients | GET /clients/:id |
+          PATCH /clients/:id | POST /clients/:id/archive | /unarchive
+PROFORMAS GET /proformas?status=&clientId= | POST /proformas | GET /:id |
+          PATCH /:id (brouillon) | POST /:id/send | /accept | /refuse |
+          /convert -> 201 Invoice (brouillon)
+INVOICES  GET /invoices?status=&paymentStatus=&overdue=&clientId= |
+          POST /invoices (brouillon) | GET /:id |
+          PATCH /:id {clientId?,issueDate?,dueDate?,notes?,lines?} (brouillon ;
+          « lines » remplace TOUTES les lignes, recalcul atomique) |
+          POST /:id/lines | PATCH /:id/lines/:lineId | DELETE /:id/lines/:lineId
+          (retournent l'Invoice) | DELETE /:id (brouillon) |
+          POST /:id/send -> { invoice, warning: null | "EMAIL_FAILED" } |
+          GET /:id/pdf -> application/pdf (ENVOYEE seulement ; exige le Bearer :
+          le front fait un fetch en blob, pas un simple lien)
+PAYMENTS  GET /payments?clientId= | GET /payments/:id |
+          POST /payments {clientId,paymentDate,amount,method,
+          allocations:[{invoiceId,amount}]} -> 201 { payment, invoices: Invoice[] }
+DASHBOARD GET /dashboard
+
+Objets :
+User     { id, email, companyName, legalForm, niu, rccm, vatRegime,
+           defaultCurrency, address, city, country, phone }
+Client   { id, type:"PARTICULIER"|"ENTREPRISE", name, email, niu, address,
+           city, country, phone, isArchived }
+TaxRate  { id, code, rate:"19.25", isExempt }
+LineInput{ description, quantity:"2.000", unitPriceHt:"50000.00", taxRateId }
+Line     { id, position, description, quantity, unitPriceHt, taxRateId,
+           appliedRate:"19.25", totalHt, totalVat, totalTtc }
+Invoice  { id, number|null, status:"BROUILLON"|"ENVOYEE", client (résumé ; =
+           snapshot si ENVOYEE), issuer: PartySnapshot|null, proformaId|null,
+           currency, issueDate, dueDate, sentAt|null, notes, totalHt,
+           totalVat, totalTtc, lines: Line[],
+           payment: null | { paidAmount, balance,
+             status:"NON_PAYEE"|"PARTIELLEMENT_PAYEE"|"PAYEE", isOverdue } }
+           (payment = null tant que BROUILLON)
+Proforma { id, reference, status, client, currency, issueDate, validUntil,
+           notes, totalHt, totalVat, totalTtc, lines, invoiceId|null }
+           reference non fiscale : PRO-AAAA-MM-XXXX (XXXX aléatoire,
+           unique par utilisateur, nouvel essai si collision)
+Payment  { id, clientId, paymentDate, amount, method:"VIREMENT"|"ESPECES"|
+           "MOBILE_MONEY"|"CHEQUE"|"AUTRE", allocations:[{invoiceId,
+           invoiceNumber, amount}] }
+Dashboard{ revenueHtMonth (somme HT des factures ENVOYEE émises ce mois),
+           collectedMonth (somme des paiements datés de ce mois),
+           outstandingTotal (somme des soldes des factures ENVOYEE),
+           overdueTotal, overdueCount,
+           overdueInvoices:[{id,number,clientName,dueDate,balance}] (5 max,
+           échéance la plus ancienne d'abord) }
+Interfaces internes backend (D3 -> C2) :
+  PdfService.genererPdf(invoice: Invoice entity avec lines, emetteurSnapshot,
+    clientSnapshot chargés): Promise<Buffer>
+  MailService.envoyerEmail({to, subject, text, html?, attachments?:
+    {filename, content: Buffer, contentType}[]}): Promise<void>
+    (lève MailSendError en cas d'échec)
+
+H. QUALITÉ (conseils SaaS retenus)
+Sécurité backend : DTO validés (whitelist) ; userId jamais lu depuis le corps
+de requête ; autorisation et filtre utilisateur sur chaque lecture et écriture
+(masquer un bouton n'est pas une protection) ; requêtes paramétrées ;
+transactions + verrous pour numérotation et paiements ; helmet ; limitation de
+débit sur connexion/inscription/refresh ; secrets seulement dans l'environnement
+(jamais Git, bundle ni logs) ; pas de mot de passe, jeton ni donnée excessive
+dans les logs ; pas de stack trace ni debug en production ; migrations
+versionnées, synchronize=false ; échapper tout HTML (PDF, email).
+Accessibilité front (WCAG 2.2 AA) : HTML natif d'abord (button = action, a =
+navigation) ; label visible sur chaque champ ; erreurs liées par
+aria-describedby, aria-invalid, résumé d'erreurs ; tout au clavier, focus
+visible, aucun piège ; modales : nom accessible, focus initial, confinement,
+retour du focus ; contraste texte 4,5:1 et composants 3:1 ; cibles >= 24 px
+(viser 44) ; reflow à 320 px et zoom 200 % ; jamais d'information par la couleur
+seule ; prefers-reduced-motion ; états chargement / vide / erreur / succès /
+hors connexion / droits insuffisants ; tableaux avec caption et th scope.
+Performance : LCP <= 2,5 s, INP <= 200 ms, CLS <= 0,1 ; JS initial d'une route
+< 150-200 Ko gzip ; découpage par route ; pas de bibliothèque lourde (graphiques,
+éditeur riche) en V1 ; images avec dimensions explicites ; polices système ou
+une seule famille (2 graisses max) ; annuler les requêtes obsolètes ; listes
+paginées ; API p95 < 500 ms ; pas de requêtes N+1.
+Tests : priorité aux calculs, à la numérotation, aux statuts, aux paiements
+(valeurs vérifiées à la main) et à l'isolation entre utilisateurs A et B.
+Un score d'outil automatique ne prouve pas la conformité.
+
+I. MANIÈRE DE TRAVAILLER AVEC L'UTILISATEUR
+1. S'il te manque un fichier, une version ou une décision, pose UNE question
+   groupée. Ne devine jamais le contenu d'un fichier existant : demande à
+   l'utilisateur de le coller.
+2. Un seul groupe cohérent par message (un module, une page). Termine par
+   « Dis "suite" » et annonce le groupe suivant. Jamais 10 fichiers d'un coup.
+3. Pédagogie : pour chaque groupe, (a) le concept de base en quelques lignes,
+   (b) les étapes avec l'explication de chacune, (c) le code, (d) l'explication
+   du code avec le raisonnement. Frontend : avant chaque bloc de code, le
+   principe de programmation concerné, puis le code, puis son explication. Si
+   un bloc reprend une structure déjà expliquée plus haut, ne la réexplique
+   pas (sauf demande).
+4. TypeScript prêt pour ESLint : types explicites des paramètres et retours,
+   aucun any implicite (unknown + garde de type), aucun import ou variable
+   inutilisé, await ou void sur chaque promesse, « import type » pour les
+   types, pas de « ! » non justifié, pas de console.log oublié.
+5. Respecte le contrat et les conventions. Un écart nécessaire se signale AVANT
+   de l'appliquer.
+6. Économie de tokens : pas de rappel du contexte, pas de code déjà donné
+   (montre les fichiers modifiés : complets s'ils font moins de 120 lignes,
+   sinon les parties changées avec repères), pas d'introduction ni de
+   conclusion longues.
+7. Si tu n'es pas sûr d'une API de bibliothèque, dis-le et indique la page de
+   documentation officielle à vérifier. Pas de code « plausible mais faux ».
+8. Données de démonstration uniquement, jamais de données réelles de clients.
+
+J. FIN DE TÂCHE
+Quand tous les livrables sont donnés, termine par un RAPPORT (15 lignes max) :
+(1) livrables faits / non faits ; (2) écarts au contrat ou au modèle (ou
+« aucun ») ; (3) commandes de vérification (lint, test, build) ; (4) hypothèses
+faites ; (5) ce que l'IA suivante doit savoir. L'utilisateur te colle ensuite
+UNIQUEMENT les erreurs de ces commandes, et tu les corriges.
+
+K. STRUCTURE DU DÉPÔT (déjà créée par l'utilisateur ; respecte-la, ne déplace rien)
+invoiceflow/
+  docker-compose.yml, README.md, .gitignore        (D1)
+  docs/diagrams/ (17 .puml), docs/prompts/, docs/API.md (C3)
+  backend/
+    src/main.ts, app.module.ts                      (D1)
+    src/config/ common/ health/                     (D1 ; common/ : filtre d'erreurs ;
+                                                     décorateurs @Public et @CurrentUser ajoutés par D2)
+    src/database/entities/ migrations/ seeds/ types/ (D1)
+    src/auth/ users/ tax-rates/ clients/            (D2)
+    src/invoices/                                   (C1 : calcul, numérotation, statuts ; C2 : contrôleur, service)
+    src/proformas/                                  (C2)
+    src/payments/                                   (C3)
+    src/pdf/ mail/ dashboard/                       (D3)
+    test/                                           (C3 : tests de bout en bout)
+  frontend/
+    netlify.toml                                    (G1, finalisé en G3)
+    e2e/                                            (G3 : Playwright)
+    src/api/                                        (G1 : types du contrat, client, hooks)
+    src/components/                                 (G1 : ui/ shadcn + composants partagés)
+    src/layouts/ routes/ styles/ lib/               (G1)
+    src/features/auth/                              (G1)
+    src/features/clients/ invoices/ proformas/      (G2)
+    src/features/payments/ dashboard/               (G3)
+Règles : un dossier backend = un module NestJS (dépendances entre modules : P12) ;
+un dossier de frontend/src/features/ = une fonctionnalité (pages, formulaires,
+hooks) ; seuls api/ et components/ sont partagés entre fonctionnalités.
+Chaque fichier que tu donnes est précédé de son chemin complet depuis la racine
+du dépôt.
+
+=== TÂCHE ===
+TÂCHE C1 : CALCUL DES MONTANTS, NUMÉROTATION, STATUTS CALCULÉS
+Branche : feat/billing-core. Dépend de : rien pour le calcul et les statuts
+(code pur). Pour la numérotation, l'entité InvoiceCounter (D1) : clé composée
+userId + year + month, champ lastNumber ; demande à l'utilisateur de te la
+coller si elle existe déjà, sinon code contre cette forme.
+Demande à l'utilisateur de te coller : P04_etat_paiement.puml,
+P05_etat_retard.puml, P07a_sequence_envoyer_facture_1.puml.
+
+Livrables, un groupe par message :
+1. InvoiceCalculatorService (backend/src/invoices/) :
+   - calculerLigne({quantity, unitPriceHt, appliedRate}) -> {totalHt, totalVat,
+     totalTtc} ; recalculer(lignes) -> montants par ligne + totaux du document.
+   - decimal.js, ROUND_HALF_UP ; ht = arrondi2(quantité x prix) ;
+     tva = arrondi2(ht x taux / 100) ; ttc = ht + tva ; totaux = somme des
+     lignes arrondies.
+   - Refus typé : quantité <= 0, prix < 0, taux < 0 ou > 100.
+   Valeurs de référence vérifiées à la main (à utiliser dans les tests) :
+   2 x 50000.00 à 19.25 -> 100000.00 / 19250.00 / 119250.00
+   3 x 3333.33 à 19.25 -> 9999.99 / 1925.00 / 11924.99 (1924.998075 -> 1925.00)
+   1.5 x 1999.99 à 19.25 -> 2999.99 / 577.50 / 3577.49
+   1 x 100000.00 à 0 -> 100000.00 / 0.00 / 100000.00
+   Document des deux premières lignes : HT 109999.99, TVA 21175.00, TTC 131174.99.
+2. InvoiceNumberingService.prochainNumero(manager: EntityManager, userId:
+   string, date: Date): Promise<string> :
+   - format FAC-AAAA-MM-NNN (NNN sur au moins 3 chiffres, zéros à gauche),
+     compteur par (utilisateur, année, mois) ; année et mois pris de « date »
+     (l'appelant passe la date du jour Africa/Douala).
+   - utilise la transaction de l'appelant (jamais la sienne), verrou
+     pessimiste (SELECT ... FOR UPDATE) ; crée la ligne du compteur si absente
+     SANS condition de course (insertion concurrente gérée).
+   - sans trou : si la transaction de l'appelant échoue, le compteur revient.
+3. invoice-status.util.ts (fonctions pures, sans horloge interne : « today »
+   en paramètre) : computeBalance, computePaymentStatus (NON_PAYEE /
+   PARTIELLEMENT_PAYEE / PAYEE, P04), isOverdue (P05, RG9, EF-06).
+4. Tests : unitaires (Jest, sans base) pour 1 et 3, y compris les valeurs de
+   référence ; tests d'intégration de 2 sur le MySQL de développement (fichiers
+   *.int-spec.ts, script npm test:int) : 001, 002, 003 ; un autre mois repart
+   à 001 ; deux utilisateurs indépendants ; 20 appels concurrents, chacun dans
+   sa transaction -> 20 numéros distincts et contigus ; rollback -> le numéro
+   n'est pas perdu.
+
+Critères d'acceptation : lint, test, test:int et build passent ; aucun float.
+À NE PAS FAIRE : pas de contrôleur ni de route ; pas de Date.now() caché.

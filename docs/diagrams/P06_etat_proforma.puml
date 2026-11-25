@@ -1,0 +1,22 @@
+@startuml
+' CONTROLE : 4 etats, 1 depart, 5 transitions (dont une boucle sur Acceptee), 1 note
+title Cycle de vie de la proforma
+left to right direction
+skinparam shadowing false
+state "Brouillon" as B
+state "Envoyée" as E
+state "Acceptée" as A
+state "Refusée" as R
+
+[*] --> B : créer
+B --> E : envoyer
+E --> A : le client accepte
+E --> R : le client refuse
+A --> A : convertir\n[pas déjà convertie]
+note on link
+  <b>Action</b> : créer une facture brouillon,
+  lignes copiées, lien vers la proforma
+end note
+
+note bottom of A : Après conversion, la proforma reste Acceptée
+@enduml

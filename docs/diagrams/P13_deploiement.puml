@@ -1,0 +1,17 @@
+@startuml
+' CONTROLE : 5 noeuds, 4 liens
+title InvoiceFlow - déploiement
+left to right direction
+skinparam shadowing false
+
+node "Navigateur de l'utilisateur" as N
+node "Netlify (application React)" as NL
+node "Render (API NestJS)" as R
+node "Base de données MySQL (hébergée)" as DB
+node "Brevo (email)" as B
+
+N --> NL : HTTPS
+N --> R : HTTPS, API
+R --> DB : connexion base de données
+R --> B : envoi d'emails
+@enduml

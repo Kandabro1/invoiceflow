@@ -1,0 +1,37 @@
+@startuml
+' CONTROLE : 6 lignes de vie, zone "transaction" autour des messages de numerotation a commit
+title Envoyer une facture (1/2) : préparation et transaction
+skinparam shadowing false
+skinparam maxMessageSize 220
+skinparam sequenceMessageAlign left
+autonumber
+
+actor Utilisateur
+participant InvoicesController
+participant InvoicesService
+participant InvoiceNumberingService
+participant InvoiceCalculatorService
+database "Base de données" as DB
+
+Utilisateur -> InvoicesController : POST /invoices/{id}/send
+note right of InvoicesController
+  JwtAuthGuard vérifie le jeton
+  avant ce contrôleur (guard global)
+end note
+InvoicesController -> InvoicesService : envoyerFacture(id, user)
+InvoicesService -> DB : charger la facture (filtre utilisateur)
+InvoicesService -> InvoicesService : vérifier les gardes
+
+group transaction
+  InvoicesService -> DB : début de transaction
+  InvoicesService -> InvoiceNumberingService : prochainNumero()
+  InvoiceNumberingService -> DB : verrouiller et incrémenter le compteur
+  InvoiceNumberingService --> InvoicesService : FAC-AAAA-MM-NNN
+  InvoicesService -> InvoiceCalculatorService : recalculer(lignes)
+  InvoiceCalculatorService --> InvoicesService : montants
+  InvoicesService -> DB : mettre à jour la facture
+  InvoicesService -> DB : validation (commit)
+end
+
+note over InvoicesService : Suite : PDF et email (diagramme 2/2)
+@enduml

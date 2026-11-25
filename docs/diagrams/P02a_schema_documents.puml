@@ -1,0 +1,91 @@
+@startuml
+' CONTROLE : 7 tables (utilisateur, client, taux_tva, proforma, ligne_proforma, facture, ligne_facture)
+title InvoiceFlow - schéma de base de données (1/2) : documents
+hide circle
+skinparam shadowing false
+skinparam nodesep 40
+skinparam ranksep 60
+
+entity utilisateur {
+  id <<PK>>
+  --
+  email <<UNIQUE>>
+  nom_entreprise
+  niu
+  rccm
+  regime_tva
+  devise_par_defaut
+}
+entity client {
+  id <<PK>>
+  --
+  utilisateur_id <<FK>>
+  type_client
+  nom
+  email
+  niu
+  est_archive
+}
+entity taux_tva {
+  id <<PK>>
+  --
+  code <<UNIQUE>>
+  taux
+  est_exonere
+}
+entity proforma {
+  id <<PK>>
+  --
+  utilisateur_id <<FK>>
+  client_id <<FK>>
+  reference
+  statut
+  montant_ttc
+}
+entity ligne_proforma {
+  id <<PK>>
+  --
+  proforma_id <<FK>>
+  taux_tva_id <<FK>>
+  position
+  description
+  quantite
+  prix_unitaire_ht
+}
+entity facture {
+  id <<PK>>
+  --
+  utilisateur_id <<FK>>
+  client_id <<FK>>
+  proforma_id <<FK, facultatif>>
+  numero
+  statut
+  date_emission
+  date_echeance
+  montant_ht
+  montant_tva
+  montant_ttc
+}
+entity ligne_facture {
+  id <<PK>>
+  --
+  facture_id <<FK>>
+  taux_tva_id <<FK>>
+  position
+  description
+  quantite
+  prix_unitaire_ht
+  taux_applique
+}
+
+utilisateur ||--o{ client
+utilisateur ||--o{ proforma
+utilisateur ||--o{ facture
+client ||--o{ proforma
+client ||--o{ facture
+proforma ||--o{ ligne_proforma
+facture ||--o{ ligne_facture
+taux_tva ||--o{ ligne_proforma
+taux_tva ||--o{ ligne_facture
+proforma |o--o| facture
+@enduml

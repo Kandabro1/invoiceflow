@@ -1,0 +1,20 @@
+@startuml
+' CONTROLE : 7 ovales, 5 fleches pointillees (4 include, 1 extend), SC3 recoit 2 fleches
+title InvoiceFlow - inclusions et extension
+left to right direction
+skinparam shadowing false
+
+usecase "UC07 Convertir une proforma\nen facture" as UC07
+usecase "UC08 Gérer les factures\nbrouillon" as UC08
+usecase "UC09 Envoyer une facture" as UC09
+usecase "UC10 Télécharger le PDF\nd'une facture" as UC10
+usecase "SC1 Vérifier la complétude" as SC1
+usecase "SC2 Attribuer le numéro" as SC2
+usecase "SC3 Générer le PDF" as SC3
+
+UC09 ..> SC1 : <<include>>
+UC09 ..> SC2 : <<include>>
+UC09 ..> SC3 : <<include>>
+UC10 ..> SC3 : <<include>>
+UC07 ..> UC08 : <<extend>>
+@enduml

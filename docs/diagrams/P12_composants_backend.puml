@@ -1,0 +1,43 @@
+@startuml
+' CONTROLE : 12 composants, 3 groupes de lecture
+title InvoiceFlow - modules du backend
+left to right direction
+skinparam shadowing false
+skinparam nodesep 40
+skinparam ranksep 80
+
+package "Socle" {
+  [ConfigModule]
+  [DatabaseModule]
+  [AuthModule]
+  [UsersModule]
+}
+package "Métier" {
+  [ClientsModule]
+  [TaxRatesModule]
+  [InvoicesModule]
+  [ProformasModule]
+  [PaymentsModule]
+  [DashboardModule]
+}
+package "Services" {
+  [PdfModule]
+  [MailModule]
+}
+
+[InvoicesModule] --> [ClientsModule]
+[InvoicesModule] --> [TaxRatesModule]
+[InvoicesModule] --> [PdfModule]
+[InvoicesModule] --> [MailModule]
+[ProformasModule] --> [ClientsModule]
+[ProformasModule] --> [TaxRatesModule]
+[ProformasModule] --> [InvoicesModule]
+[PaymentsModule] --> [InvoicesModule]
+[DashboardModule] --> [InvoicesModule]
+[DashboardModule] --> [PaymentsModule]
+
+note as NoteAuth
+  Les 6 modules métier dépendent aussi de AuthModule
+  et de DatabaseModule (flèches non dessinées pour la lisibilité)
+end note
+@enduml

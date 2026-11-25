@@ -1,0 +1,33 @@
+@startuml
+' CONTROLE : 2 classes de reference + 2 classes + 1 enumeration
+title InvoiceFlow - classes métier (2/2) : paiements
+hide empty members
+skinparam shadowing false
+skinparam nodesep 60
+skinparam ranksep 70
+
+class Client <<voir 1/2>>
+class Facture <<voir 1/2>>
+class Paiement {
+  datePaiement
+  montant
+  methode : MethodePaiement
+  allouer()
+}
+class AllocationPaiement {
+  montantAlloue
+}
+enum MethodePaiement {
+  VIREMENT
+  ESPECES
+  MOBILE_MONEY
+  CHEQUE
+  AUTRE
+}
+
+Client "1" -- "0..*" Paiement
+Paiement "1" -- "1..*" AllocationPaiement
+AllocationPaiement "0..*" -- "1" Facture
+
+Paiement ..> MethodePaiement
+@enduml
