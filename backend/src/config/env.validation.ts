@@ -24,7 +24,7 @@ const schema = Joi.object<EnvConfig>({
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().integer().min(1).max(65535).default(3306),
   DB_USER: Joi.string().required(),
-  DB_PASSWORD: Joi.string().required(),
+  DB_PASSWORD: Joi.string().allow('').required(),
   DB_NAME: Joi.string().required(),
   JWT_ACCESS_SECRET: Joi.string().min(32).required(),
   JWT_REFRESH_SECRET: Joi.string().min(32).required(),
