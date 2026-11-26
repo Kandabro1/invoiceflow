@@ -1,0 +1,37 @@
+COMPLÉMENT RAPPORT D1 : ÉCARTS AU SCHÉMA P02
+
+| Entité | Colonne / table ajoutée ou modifiée | Type | Nullable | Raison |
+|---|---|---|---|---|
+| utilisateur | mot_de_passe_hash | varchar(255) | NON | Auth (sécurité, select: false) |
+| utilisateur | forme_juridique | varchar(100) | OUI | Mentions légales facture (RG10) |
+| utilisateur | adresse, ville, pays, telephone | varchar | OUI | Coordonnées émetteur (Snapshot) |
+| utilisateur | cree_le | datetime | NON | Audit (@CreateDateColumn) |
+| client | adresse, ville, pays, telephone | varchar | OUI | Coordonnées client (Snapshot) |
+| client | cree_le | datetime | NON | Audit |
+| proforma | date_emission, date_validite | date | OUI | Cahier des charges |
+| proforma | devise | varchar(3) | NON | V2 multi-devise (défaut XAF) |
+| proforma | notes | text | OUI | Notes libres |
+| proforma | cree_le | datetime | NON | Audit |
+| facture | devise | varchar(3) | NON | V2 multi-devise (défaut XAF) |
+| facture | notes | text | OUI | Notes libres |
+| facture | date_envoi | datetime | OUI | Horodatage envoi (distinct de emission) |
+| facture | emetteur_snapshot | json | OUI | Fige les infos émetteur (RG7/RG10) |
+| facture | client_snapshot | json | OUI | Fige les infos client (RG7/RG10) |
+| facture | cree_le | datetime | NON | Audit |
+| refresh_token | (Nouvelle table) | - | - | Rotation JWT (sécurité) |
+
+1. Colonnes P02 absentes ou renommées
+Aucune. Toutes les colonnes P02 sont présentes (les noms anglais TypeScript sont mappés en snake_case français via @Column({ name: ... })).
+
+2. Index et clés étrangères ajoutés (hors P02)
+- uq_facture_numero : UNIQUE (utilisateur_id, numero) sur facture pour garantir l'absence de doublons de numéros (RG3).
+- idx_proforma_reference : UNIQUE (utilisateur_id, reference) sur proforma pour la génération aléatoire.
+- Index ajoutés : utilisateur_id sur client, proforma, facture, paiement, refresh_token ; (utilisateur_id, statut) et (utilisateur_id, date_echeance) sur facture (performance Dashboard) ; token_hash sur refresh_token.
+- FK : ON DELETE RESTRICT partout (sauf CASCADE sur les lignes enfants de documents et refresh_token).
+
+3. Contraintes d'unicité
+- email sur utilisateur est UNIQUE.
+- code sur taux_tva est UNIQUE.
+- numero sur facture est UNIQUE par utilisateur (NULL autorisé tant que BROUILLON).
+- reference sur proforma est UNIQUE par utilisateur.
+- token_hash sur refresh_token est UNIQUE.
