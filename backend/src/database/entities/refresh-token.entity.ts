@@ -23,7 +23,7 @@ export class RefreshToken {
   @JoinColumn({ name: 'utilisateur_id' })
   user!: User;
 
-  @Column({ name: 'token_hash', length: 255 })
+  @Column({ name: 'token_hash', type: 'varchar', length: 255 })
   tokenHash!: string;
 
   @Column({ name: 'expire_le', type: 'datetime' })

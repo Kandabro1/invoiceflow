@@ -30,28 +30,28 @@ export class Client {
   @Column({ name: 'type_client', type: 'enum', enum: ClientType })
   type!: ClientType;
 
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   name!: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   email!: string | null;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   niu!: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   address!: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   city!: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   country!: string | null;
 
-  @Column({ length: 30, nullable: true })
+  @Column({ type: 'varchar', length: 30, nullable: true })
   phone!: string | null;
 
-  @Column({ name: 'est_archive', default: false })
+  @Column({ name: 'est_archive', type: 'boolean', default: false })
   isArchived!: boolean;
 
   @CreateDateColumn({ name: 'cree_le', type: 'datetime' })

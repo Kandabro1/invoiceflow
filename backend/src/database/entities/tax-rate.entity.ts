@@ -7,13 +7,13 @@ export class TaxRate {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true, length: 50 })
+  @Column({ type: 'varchar', unique: true, length: 50 })
   code!: string;
 
   @Column({ type: 'decimal', precision: 5, scale: 2 })
   rate!: string;
 
-  @Column({ name: 'est_exonere', default: false })
+  @Column({ name: 'est_exonere', type: 'boolean', default: false })
   isExempt!: boolean;
 
   @OneToMany(() => ProformaLine, (l) => l.taxRate)

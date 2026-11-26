@@ -36,7 +36,7 @@ export class Proforma {
   @JoinColumn({ name: 'client_id' })
   client!: Client;
 
-  @Column({ length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   reference!: string;
 
   @Column({
@@ -52,7 +52,7 @@ export class Proforma {
   @Column({ name: 'date_validite', type: 'date', nullable: true })
   validUntil!: string | null;
 
-  @Column({ length: 3, default: 'XAF' })
+  @Column({ type: 'varchar', length: 3, default: 'XAF' })
   currency!: string;
 
   @Column({ type: 'text', nullable: true })

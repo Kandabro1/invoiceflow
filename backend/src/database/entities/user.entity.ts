@@ -17,40 +17,55 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true, length: 255 })
+  @Column({ type: 'varchar', unique: true, length: 255 })
   email!: string;
 
-  @Column({ name: 'mot_de_passe_hash', length: 255, select: false })
+  @Column({
+    name: 'mot_de_passe_hash',
+    type: 'varchar',
+    length: 255,
+    select: false,
+  })
   passwordHash!: string;
 
-  @Column({ name: 'nom_entreprise', length: 255 })
+  @Column({ name: 'nom_entreprise', type: 'varchar', length: 255 })
   companyName!: string;
 
-  @Column({ name: 'forme_juridique', length: 100, nullable: true })
+  @Column({
+    name: 'forme_juridique',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   legalForm!: string | null;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   niu!: string | null;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   rccm!: string | null;
 
-  @Column({ name: 'regime_tva', length: 50, nullable: true })
+  @Column({ name: 'regime_tva', type: 'varchar', length: 50, nullable: true })
   vatRegime!: string | null;
 
-  @Column({ name: 'devise_par_defaut', length: 3, default: 'XAF' })
+  @Column({
+    name: 'devise_par_defaut',
+    type: 'varchar',
+    length: 3,
+    default: 'XAF',
+  })
   defaultCurrency!: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   address!: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   city!: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   country!: string | null;
 
-  @Column({ length: 30, nullable: true })
+  @Column({ type: 'varchar', length: 30, nullable: true })
   phone!: string | null;
 
   @CreateDateColumn({ name: 'cree_le', type: 'datetime' })

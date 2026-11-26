@@ -39,7 +39,7 @@ export class Invoice {
   @JoinColumn({ name: 'client_id' })
   client!: Client;
 
-  @Column({ name: 'proforma_id', nullable: true })
+  @Column({ name: 'proforma_id', type: 'int', nullable: true })
   proformaId!: number | null;
 
   @OneToOne(() => Proforma, (p) => p.invoice, {
@@ -49,7 +49,7 @@ export class Invoice {
   @JoinColumn({ name: 'proforma_id' })
   proforma!: Proforma | null;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   number!: string | null;
 
   @Column({
@@ -68,7 +68,7 @@ export class Invoice {
   @Column({ name: 'date_envoi', type: 'datetime', nullable: true })
   sentAt!: Date | null;
 
-  @Column({ length: 3, default: 'XAF' })
+  @Column({ type: 'varchar', length: 3, default: 'XAF' })
   currency!: string;
 
   @Column({ type: 'text', nullable: true })
