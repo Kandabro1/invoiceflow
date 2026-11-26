@@ -1,0 +1,26 @@
+RAPPORT FINAL - TÂCHE D1 : SOCLE BACKEND ET BASE DE DONNÉES
+
+(1) Livrables faits / non faits
+Tous les livrables sont faits : initialisation NestJS strict, scripts npm, ESLint/Prettier, config .env, ConfigModule (Joi), DatabaseModule (TypeORM), les 11 entités, migration initiale, seed idempotent, main.ts (helmet, cookies, validation, erreurs, throttler), route /api/health et README. Aucun non fait.
+
+(2) Écarts au contrat ou au modèle
+- Aucun écart sur le modèle de données (P02). Les 11 entités respectent les tables, index et FK RESTRICT.
+- Écart d'environnement validé par le chef de projet : abandon de Docker au profit de XAMPP (MariaDB) en local, conformément à la règle obligatoire.
+
+(3) Commandes de vérification
+npm run lint (succès) ; npm run build (succès) ; npm run start:dev ; GET /api/health (renvoie {"status":"ok","database":"up"}) ; npm run seed:run (deux fois : pas de doublon).
+
+(4) Hypothèses faites
+- Les DECIMAL sont typés string en TypeScript, pas de decimalNumbers: true.
+- Les snapshots (JSON) sont typés en json et lus en objet.
+- onDelete: 'CASCADE' sur les lignes de documents, mais RESTRICT sur les documents et clients (RG7).
+
+(5) Compatibilité MariaDB/MySQL (Point 9 du chef de projet)
+- JSON : MariaDB stocke en LONGTEXT + CHECK, MySQL a un type natif. L'API lisant l'objet entier, c'est transparent. À tester sur MySQL hébergé.
+- Dates : Types datetime et date identiques. Surveiller le fuseau horaire (timezone) sur le serveur de production.
+- Décimaux / Verrous : DECIMAL(15,2) identique. Le verrou pessimiste (pessimistic_write sur InnoDB) fonctionne pareil, à tester sous forte concurrence sur MySQL hébergé.
+
+(6) Ce que l'IA suivante (D2) doit savoir
+- La base est gérée par migrations (synchronize: false). Toujours générer et appliquer une migration pour tout changement.
+- L'utilisateur DB local est invoiceflow_user (sans mot de passe).
+- mot_de_passe_hash a select: false : il faut utiliser addSelect pour le charger lors du login.
