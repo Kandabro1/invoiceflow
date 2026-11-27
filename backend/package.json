@@ -18,6 +18,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\" --max-warnings 0",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
+    "test:int": "jest --config ./jest.int.config.json --runInBand",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
