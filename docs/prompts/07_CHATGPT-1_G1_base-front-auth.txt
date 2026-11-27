@@ -1,6 +1,6 @@
-INVOICEFLOW - PROMPT 7/9 - COMPTE CHATGPT-1 - TÂCHE G1
+INVOICEFLOW - PROMPT 7/9 - COMPTE CHATGPT-1 - TÂCHE G1 (version 1.1, 27 nov. 2026)
 Mode d'emploi : ouvre une NOUVELLE conversation sur le compte CHATGPT-1, colle TOUT ce fichier.
-Ne commence cette tâche que si ses dépendances sont fusionnées dans main (voir 00_PLAN_DU_CHEF).
+Cette tâche ne dépend de rien : tu peux la commencer immédiatement.
 
 TON RÔLE : tu es le compte ChatGPT n°1. Ta tâche : G1, base du frontend, design system, authentification.
 
@@ -16,10 +16,11 @@ conversation Claude) a défini le plan. Vous ne communiquez pas entre vous :
 votre seul lien est ce CONTEXTE (identique pour les neuf) et le dépôt GitHub
 que l'utilisateur alimente (tu ne pousses rien toi-même : tu donnes le code
 dans le chat, l'utilisateur le copie et le commite).
-- DeepSeek : D1 socle backend et base de données ; D2 Auth, Users, Clients,
-  TaxRates ; D3 Pdf, Mail, Dashboard.
-- Claude : C1 calcul des montants, numérotation, statuts calculés ; C2 factures
-  et proformas ; C3 paiements, tests de bout en bout, revue de sécurité.
+- DeepSeek : D1 socle backend et base de données (TERMINÉ) ; D2 Auth, Users,
+  Clients, TaxRates ; D3 Pdf, Mail, Dashboard.
+- Claude : C1 calcul des montants, numérotation, statuts calculés (TERMINÉ) ;
+  C2 factures et proformas ; C3 paiements, tests de bout en bout, revue de
+  sécurité.
 - ChatGPT : G1 base du frontend, design system, authentification ; G2 clients,
   factures, proformas ; G3 paiements, tableau de bord, accessibilité,
   performance, déploiement Netlify.
@@ -38,10 +39,13 @@ apprend en construisant (méthode « génération puis explication »).
 C. STACK IMPOSÉE (ne la change pas)
 - Monorepo : backend/, frontend/, docs/. TypeScript strict partout. npm.
   Node.js LTS actuelle (vérifier la version acceptée par Render).
-- Backend : NestJS, TypeORM, MySQL 8 (mysql2, InnoDB, utf8mb4),
-  class-validator + class-transformer, @nestjs/config, @nestjs/jwt +
-  passport-jwt, bcrypt, decimal.js, helmet, @nestjs/throttler, cookie-parser,
-  pdfkit, Jest + supertest.
+- Environnement de l'utilisateur : Windows, terminal PowerShell, VS Code.
+  Donne les commandes pour PowerShell. PAS de Docker.
+- Backend : NestJS, TypeORM, MySQL 8 visé en production (mysql2, InnoDB,
+  utf8mb4) ; en développement local : XAMPP (MariaDB). Le code doit fonctionner
+  à l'identique sur les deux. + class-validator + class-transformer,
+  @nestjs/config, @nestjs/jwt + passport-jwt, bcrypt, decimal.js, helmet,
+  @nestjs/throttler, cookie-parser, pdfkit, Jest + supertest.
 - Frontend : React + Vite + TypeScript, React Router, TanStack Query,
   react-hook-form + zod, Tailwind CSS, shadcn/ui, Lucide, decimal.js (aperçu
   seulement), Vitest + Testing Library + axe, Playwright.
@@ -54,6 +58,7 @@ C. STACK IMPOSÉE (ne la change pas)
 D. CONVENTIONS
 - Git : une branche par tâche, commits type « feat: ... », « fix: ... »,
   « test: ... ». Jamais de secret dans Git : seulement .env.example.
+  Fins de ligne : LF (un .gitattributes « * text=auto eol=lf » est à la racine).
 - Nommage : classes, propriétés et champs JSON en anglais camelCase. Tables
   et colonnes MySQL = exactement celles des diagrammes P02 (snake_case
   français). Valeurs d'énumération en MAJUSCULES françaises (BROUILLON,
@@ -62,6 +67,9 @@ D. CONVENTIONS
   enregistrerLigne, convertir, enregistrerPaiement, genererPdf, envoyerEmail.
 - Structure backend : backend/src/<module>/ (module, controller, service,
   dto/). Entités partagées dans backend/src/database/entities/. Modules = P12.
+- IDENTIFIANTS : entiers en base. En JSON, tous les id sont des `number`
+  (id: 12, clientId: 3, taxRateId: 1, invoiceId: 7). Seuls les montants et
+  quantités sont des chaînes décimales.
 - ARGENT : jamais de float. DECIMAL(15,2) en base (quantité DECIMAL(12,3)).
   En JSON : chaînes décimales ("119250.00", "2.000"). Calculs avec decimal.js,
   ROUND_HALF_UP à 2 décimales, ligne par ligne. Les totaux d'un document sont
@@ -75,7 +83,8 @@ RG1  Chaque utilisateur ne voit que ses données : filtre serveur sur chaque
      lecture ET chaque écriture ; ressource d'un autre utilisateur = 404.
 RG2  Un client a plusieurs proformas et factures ; un document a un seul client.
 RG3  Numéro de facture unique, séquentiel, sans trou, FAC-AAAA-MM-NNN
-     (AAAA-MM = date d'envoi). Attribué à l'envoi, jamais à un brouillon.
+     (AAAA-MM = date d'envoi, fuseau Africa/Douala). Attribué à l'envoi, jamais
+     à un brouillon. La date d'émission est fixée à l'envoi, avec la même date.
 RG4  Une facture a au moins une ligne : description, quantité, prix unitaire
      HT, taux de TVA propre à la ligne.
 RG5  Taux de TVA pris dans la table taux_tva (pas de saisie libre) ; le taux
@@ -99,6 +108,8 @@ F. MODÈLE DE DONNÉES
 Source de vérité : diagrammes P02a et P02b (10 tables : utilisateur, client,
 taux_tva, proforma, ligne_proforma, facture, ligne_facture, paiement,
 allocation_paiement, compteur_facture). Leurs colonnes = minimum obligatoire.
+Les noms de colonnes en base sont en français (snake_case) ; les propriétés
+TypeScript des entités restent en anglais camelCase.
 ÉCARTS AUTORISÉS (nécessaires au cahier des charges ; à lister dans le
 rapport de fin de tâche ; tout autre écart demande l'accord de l'utilisateur) :
 - utilisateur : mot_de_passe_hash, forme_juridique, adresse, ville, pays,
@@ -135,7 +146,10 @@ autre utilisateur (jamais 403 pour cela) | 409 conflit | 422 règle métier |
 429 trop de requêtes.
 Codes métier : EMAIL_ALREADY_USED, INVALID_CREDENTIALS, INVOICE_LOCKED,
 INVOICE_NOT_READY, PROFORMA_NOT_ACCEPTED, PROFORMA_ALREADY_CONVERTED,
-PAYMENT_ALLOCATION_INVALID.
+PAYMENT_ALLOCATION_INVALID. D'autres codes (erreurs de calcul sur une ligne :
+quantité, prix, taux, date invalides) peuvent arriver en 400/422 : le client
+API doit afficher le message en français de toute erreur, même d'un code
+inconnu.
 Listes paginées : ?page=1&limit=20 -> { items, total, page, limit }.
 
 Routes :
@@ -164,7 +178,7 @@ PAYMENTS  GET /payments?clientId= | GET /payments/:id |
           allocations:[{invoiceId,amount}]} -> 201 { payment, invoices: Invoice[] }
 DASHBOARD GET /dashboard
 
-Objets :
+Objets (tous les id sont des `number`) :
 User     { id, email, companyName, legalForm, niu, rccm, vatRegime,
            defaultCurrency, address, city, country, phone }
 Client   { id, type:"PARTICULIER"|"ENTREPRISE", name, email, niu, address,
@@ -175,8 +189,10 @@ Line     { id, position, description, quantity, unitPriceHt, taxRateId,
            appliedRate:"19.25", totalHt, totalVat, totalTtc }
 Invoice  { id, number|null, status:"BROUILLON"|"ENVOYEE", client (résumé ; =
            snapshot si ENVOYEE), issuer: PartySnapshot|null, proformaId|null,
-           currency, issueDate, dueDate, sentAt|null, notes, totalHt,
-           totalVat, totalTtc, lines: Line[],
+           currency, issueDate (AAAA-MM-JJ ; fixée à l'envoi, donc null
+           possible en brouillon : à confirmer avec C2, type string|null),
+           dueDate, sentAt|null, notes, totalHt, totalVat, totalTtc,
+           lines: Line[],
            payment: null | { paidAmount, balance,
              status:"NON_PAYEE"|"PARTIELLEMENT_PAYEE"|"PAYEE", isOverdue } }
            (payment = null tant que BROUILLON)
@@ -232,6 +248,8 @@ I. MANIÈRE DE TRAVAILLER AVEC L'UTILISATEUR
    l'utilisateur de le coller.
 2. Un seul groupe cohérent par message (un module, une page). Termine par
    « Dis "suite" » et annonce le groupe suivant. Jamais 10 fichiers d'un coup.
+   Rythme lent : peu de contenu par message, pour que l'utilisateur ait le
+   temps d'assimiler, et montre clairement le lien entre les fichiers.
 3. Pédagogie : pour chaque groupe, (a) le concept de base en quelques lignes,
    (b) les étapes avec l'explication de chacune, (c) le code, (d) l'explication
    du code avec le raisonnement. Frontend : avant chaque bloc de code, le
@@ -241,7 +259,9 @@ I. MANIÈRE DE TRAVAILLER AVEC L'UTILISATEUR
 4. TypeScript prêt pour ESLint : types explicites des paramètres et retours,
    aucun any implicite (unknown + garde de type), aucun import ou variable
    inutilisé, await ou void sur chaque promesse, « import type » pour les
-   types, pas de « ! » non justifié, pas de console.log oublié.
+   types, pas de « ! » non justifié, pas de console.log oublié. Code déjà
+   formaté selon Prettier (fins de ligne LF) : l'utilisateur a eu des dizaines
+   d'erreurs Prettier sur le backend, ne les reproduis pas.
 5. Respecte le contrat et les conventions. Un écart nécessaire se signale AVANT
    de l'appliquer.
 6. Économie de tokens : pas de rappel du contexte, pas de code déjà donné
@@ -255,26 +275,28 @@ I. MANIÈRE DE TRAVAILLER AVEC L'UTILISATEUR
 J. FIN DE TÂCHE
 Quand tous les livrables sont donnés, termine par un RAPPORT (15 lignes max) :
 (1) livrables faits / non faits ; (2) écarts au contrat ou au modèle (ou
-« aucun ») ; (3) commandes de vérification (lint, test, build) ; (4) hypothèses
-faites ; (5) ce que l'IA suivante doit savoir. L'utilisateur te colle ensuite
-UNIQUEMENT les erreurs de ces commandes, et tu les corriges.
+« aucun ») ; (3) commandes de vérification ; (4) hypothèses faites ; (5) ce
+que l'IA suivante doit savoir. Les commandes de vérification sont celles que
+l'utilisateur lancera lui-même dans frontend/ : npm run lint, npm run test,
+npm run build, npx prettier --check ., npm audit --omit=dev (puis gitleaks à
+la racine). Ne prétends pas les avoir exécutées. L'utilisateur te colle
+ensuite UNIQUEMENT les erreurs, et tu les corriges.
 
 K. STRUCTURE DU DÉPÔT (déjà créée par l'utilisateur ; respecte-la, ne déplace rien)
 invoiceflow/
-  docker-compose.yml, README.md, .gitignore        (D1)
-  docs/diagrams/ (17 .puml), docs/prompts/, docs/API.md (C3)
-  backend/
-    src/main.ts, app.module.ts                      (D1)
-    src/config/ common/ health/                     (D1 ; common/ : filtre d'erreurs ;
-                                                     décorateurs @Public et @CurrentUser ajoutés par D2)
-    src/database/entities/ migrations/ seeds/ types/ (D1)
+  README.md, .gitignore, .gitattributes, .gitleaksignore
+  docs/diagrams/ (17 .puml), docs/prompts/, docs/rapport/, docs/API.md (C3)
+  backend/                                          (D1 et C1 terminés)
+    src/main.ts, app.module.ts
+    src/config/ common/ health/ database/           (D1)
     src/auth/ users/ tax-rates/ clients/            (D2)
-    src/invoices/                                   (C1 : calcul, numérotation, statuts ; C2 : contrôleur, service)
+    src/invoices/                                   (C1 : calcul, numérotation,
+                                                     statuts ; C2 : contrôleur, service)
     src/proformas/                                  (C2)
     src/payments/                                   (C3)
     src/pdf/ mail/ dashboard/                       (D3)
     test/                                           (C3 : tests de bout en bout)
-  frontend/
+  frontend/                                         (dossier créé, vide au départ)
     netlify.toml                                    (G1, finalisé en G3)
     e2e/                                            (G3 : Playwright)
     src/api/                                        (G1 : types du contrat, client, hooks)
@@ -291,7 +313,9 @@ du dépôt.
 
 === TÂCHE ===
 TÂCHE G1 : BASE DU FRONTEND, DESIGN SYSTEM, AUTHENTIFICATION
-Branche : feat/frontend-base. Dépend de : rien (tu codes contre le contrat).
+Branche : g1-front (depuis main à jour). Dépend de : rien (tu codes contre le
+contrat ; le backend d'authentification D2 n'existe pas encore, donc teste
+avec des réponses simulées).
 Demande à l'utilisateur : le logo (1200x1200 px, PNG, à convertir en WebP avec
 dimensions explicites) et, s'il le souhaite, des composants 21st.dev (voir
 règle plus bas).
@@ -320,6 +344,9 @@ Livrables, un groupe par message (principe, code, explication à chaque bloc) :
    Prettier, Vitest + Testing Library + axe ; alias « @/ » ; proxy Vite /api
    vers http://localhost:3000 ; netlify.toml avec redirection /api/* vers l'URL
    Render (valeur à remplacer, signalée) et repli SPA /* -> /index.html.
+   Prettier : fichier de config avec endOfLine "lf" ; scripts npm « lint »
+   (eslint avec --max-warnings 0), « format » (prettier --write), « test »,
+   « build ».
 2. Design system : tokens en variables CSS (couleurs clair et sombre avec la
    variante primary-strong, espacements 4/8/12/16/24/32/48/64, rayons, ombres,
    typographie 16 px / interligne 1,5, police système ou une seule famille en
@@ -335,10 +362,11 @@ Livrables, un groupe par message (principe, code, explication à chaque bloc) :
    retour du focus), notification sobre (aria-live polite), DataTable (caption,
    th scope, défilement horizontal local), Pagination, MoneyText (formate une
    CHAÎNE décimale sans perte de précision : "119250.00" -> « 119 250 FCFA »).
-5. Couche API typée : src/api/types.ts (TOUS les objets du contrat), client
-   fetch (Bearer lu en mémoire, sur 401 un seul refresh puis rejeu, erreurs
-   normalisées en ApiError au format du contrat), hooks TanStack Query pour
-   l'authentification et le profil.
+5. Couche API typée : src/api/types.ts (TOUS les objets du contrat, id en
+   number, montants en string), client fetch (Bearer lu en mémoire, sur 401 un
+   seul refresh puis rejeu, erreurs normalisées en ApiError au format du
+   contrat, message affiché même pour un code inconnu), hooks TanStack Query
+   pour l'authentification et le profil.
 6. Authentification : AuthProvider (accessToken en mémoire ; au chargement,
    tentative de /auth/refresh), ProtectedRoute, pages Inscription, Connexion
    (bouton afficher/masquer le mot de passe, collage autorisé, autocomplete
@@ -348,9 +376,9 @@ Livrables, un groupe par message (principe, code, explication à chaque bloc) :
 7. Tests Vitest : formulaire de connexion (erreurs + axe sans violation),
    ConfirmDialog (focus), StatusBadge, rejeu après refresh du client API.
 
-Critères d'acceptation : lint, test et build passent ; 320 px sans défilement
-horizontal ; connexion faisable au clavier seul ; taille du bundle initial
-rapportée.
+Critères d'acceptation : lint, test et build passent (sans erreur Prettier) ;
+320 px sans défilement horizontal ; connexion faisable au clavier seul ; taille
+du bundle initial rapportée.
 RÈGLE 21st.dev : tu ne peux pas appeler son serveur. Si un composant du
 catalogue 21st.dev (compatible shadcn) te semble utile, donne la requête de
 recherche exacte ; l'utilisateur te colle le code (l'offre gratuite limite les
