@@ -1,0 +1,12 @@
+RAPPORT C1 : calcul des montants, numérotation, statuts calculés
+Branche utilisée : c1-calcul (et non feat/billing-core). Dernier commit : 50d369b.
+
+1. LIVRABLES : tous faits. InvoiceCalculatorService (+ erreur typée), InvoiceNumberingService, invoice-status.util.ts, tests unitaires (calcul, statuts), tests d'intégration de la numérotation et script test:int. Valeurs de référence vérifiées à la main : 119250.00 / 11924.99 / 3577.49, totaux 131174.99.
+
+2. ÉCARTS : (a) prochainNumero(manager, userId: number, date), conformément à ta décision. (b) Ajouts hors liste : invoice-calculation.error.ts (codes INVALID_NUMBER, QUANTITY, UNIT_PRICE, TAX_RATE, DATE), computePaymentSummary (objet "payment" du contrat) et toDoualaDate(Date). (c) Les groupes 2 et 3 ont été commités par erreur sur main (22d1405), sans conflit ni réécriture d'historique. Le groupe 4 (50d369b) est sur c1-calcul, qui contient donc tout ; main en est un ancêtre direct, la fusion se fait par fast-forward.
+
+3. VÉRIFICATIONS, toutes OK sur mon périmètre : npm test (42 tests), npm run test:int (6 tests, dont 20 appels concurrents et rollback), npx eslint src/invoices, npm run build. Hors périmètre : npm run lint complet échoue sur la migration de D1 (prettier).
+
+4. HYPOTHÈSES : (a) Noms de colonnes : j'utilise les noms de PROPRIÉTÉS des entités. Une seule requête brute (ensureCounterRow, INSERT ... ON DUPLICATE KEY UPDATE) : table et colonnes lues dans les métadonnées TypeORM, rien en dur ; syntaxe propre à MySQL/MariaDB. (b) Payé supérieur au TTC ou TTC à 0.00 = PAYEE ; solde négatif non écrêté. (c) Tests d'intégration lancés sur MariaDB (XAMPP) : à relancer sur MySQL 8 avant déploiement. (d) Après le renommage des colonnes par D1 : migration:run puis relancer test:int.
+
+5. POUR C2/C3 : à l'envoi, appeler prochainNumero(manager, facture.userId, new Date()) dans la transaction de C2, puis recalculer ; déclarer les deux services dans InvoicesModule. Mapper InvoiceCalculationError (lineIndex = position de la ligne) vers 400/422 : aucun code métier du contrat ne correspond. recalculer([]) renvoie des zéros (RG4 à imposer par C2). Statut et retard : computePaymentSummary(facture, montants des allocations, toDoualaDate(new Date())) ; les montants des lignes sortent dans l'ordre d'entrée.
