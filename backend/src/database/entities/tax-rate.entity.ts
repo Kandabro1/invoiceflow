@@ -10,7 +10,7 @@ export class TaxRate {
   @Column({ type: 'varchar', unique: true, length: 50 })
   code!: string;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2 })
+  @Column({ name: 'taux', type: 'decimal', precision: 5, scale: 2 })
   rate!: string;
 
   @Column({ name: 'est_exonere', type: 'boolean', default: false })

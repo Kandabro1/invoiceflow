@@ -30,7 +30,7 @@ export class Client {
   @Column({ name: 'type_client', type: 'enum', enum: ClientType })
   type!: ClientType;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ name: 'nom', type: 'varchar', length: 255 })
   name!: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -39,16 +39,16 @@ export class Client {
   @Column({ type: 'varchar', length: 50, nullable: true })
   niu!: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'adresse', type: 'varchar', length: 255, nullable: true })
   address!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'ville', type: 'varchar', length: 100, nullable: true })
   city!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'pays', type: 'varchar', length: 100, nullable: true })
   country!: string | null;
 
-  @Column({ type: 'varchar', length: 30, nullable: true })
+  @Column({ name: 'telephone', type: 'varchar', length: 30, nullable: true })
   phone!: string | null;
 
   @Column({ name: 'est_archive', type: 'boolean', default: false })

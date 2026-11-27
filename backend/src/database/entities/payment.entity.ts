@@ -37,10 +37,10 @@ export class Payment {
   @Column({ name: 'date_paiement', type: 'date' })
   paymentDate!: string;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({ name: 'montant', type: 'decimal', precision: 15, scale: 2 })
   amount!: string;
 
-  @Column({ type: 'enum', enum: PaymentMethod })
+  @Column({ name: 'methode', type: 'enum', enum: PaymentMethod })
   method!: PaymentMethod;
 
   @CreateDateColumn({ name: 'cree_le', type: 'datetime' })

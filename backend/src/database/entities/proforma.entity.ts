@@ -36,10 +36,11 @@ export class Proforma {
   @JoinColumn({ name: 'client_id' })
   client!: Client;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ name: 'reference', type: 'varchar', length: 50 })
   reference!: string;
 
   @Column({
+    name: 'statut',
     type: 'enum',
     enum: ProformaStatus,
     default: ProformaStatus.BROUILLON,
@@ -52,7 +53,7 @@ export class Proforma {
   @Column({ name: 'date_validite', type: 'date', nullable: true })
   validUntil!: string | null;
 
-  @Column({ type: 'varchar', length: 3, default: 'XAF' })
+  @Column({ name: 'devise', type: 'varchar', length: 3, default: 'XAF' })
   currency!: string;
 
   @Column({ type: 'text', nullable: true })

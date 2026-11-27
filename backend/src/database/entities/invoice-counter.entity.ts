@@ -10,10 +10,10 @@ export class InvoiceCounter {
   @JoinColumn({ name: 'utilisateur_id' })
   user!: User;
 
-  @PrimaryColumn({ type: 'int' })
+  @PrimaryColumn({ name: 'annee', type: 'int' })
   year!: number;
 
-  @PrimaryColumn({ type: 'int' })
+  @PrimaryColumn({ name: 'mois', type: 'int' })
   month!: number;
 
   @Column({ name: 'dernier_numero', type: 'int', default: 0 })

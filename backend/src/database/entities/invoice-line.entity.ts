@@ -35,7 +35,7 @@ export class InvoiceLine {
   @Column({ type: 'text' })
   description!: string;
 
-  @Column({ type: 'decimal', precision: 12, scale: 3 })
+  @Column({ name: 'quantite', type: 'decimal', precision: 12, scale: 3 })
   quantity!: string;
 
   @Column({

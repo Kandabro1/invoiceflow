@@ -56,16 +56,16 @@ export class User {
   })
   defaultCurrency!: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'adresse', type: 'varchar', length: 255, nullable: true })
   address!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'ville', type: 'varchar', length: 100, nullable: true })
   city!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'pays', type: 'varchar', length: 100, nullable: true })
   country!: string | null;
 
-  @Column({ type: 'varchar', length: 30, nullable: true })
+  @Column({ name: 'telephone', type: 'varchar', length: 30, nullable: true })
   phone!: string | null;
 
   @CreateDateColumn({ name: 'cree_le', type: 'datetime' })

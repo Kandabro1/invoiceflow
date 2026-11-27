@@ -49,10 +49,11 @@ export class Invoice {
   @JoinColumn({ name: 'proforma_id' })
   proforma!: Proforma | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ name: 'numero', type: 'varchar', length: 20, nullable: true })
   number!: string | null;
 
   @Column({
+    name: 'statut',
     type: 'enum',
     enum: InvoiceStatus,
     default: InvoiceStatus.BROUILLON,
@@ -68,7 +69,7 @@ export class Invoice {
   @Column({ name: 'date_envoi', type: 'datetime', nullable: true })
   sentAt!: Date | null;
 
-  @Column({ type: 'varchar', length: 3, default: 'XAF' })
+  @Column({ name: 'devise', type: 'varchar', length: 3, default: 'XAF' })
   currency!: string;
 
   @Column({ type: 'text', nullable: true })
