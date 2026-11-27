@@ -2,7 +2,8 @@ export type InvoiceCalculationErrorCode =
   | 'INVALID_NUMBER'
   | 'INVALID_QUANTITY'
   | 'INVALID_UNIT_PRICE'
-  | 'INVALID_TAX_RATE';
+  | 'INVALID_TAX_RATE'
+  | 'INVALID_DATE';
 
 export class InvoiceCalculationError extends Error {
   constructor(
